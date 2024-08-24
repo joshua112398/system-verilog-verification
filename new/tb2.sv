@@ -141,3 +141,28 @@ endmodule
 ////////////////////////////////////////////
 
 // ASSIGNMENT A55: CUSTOM CONSTRUCTORS FOR CLASSES //
+
+module tb2();
+    class test_class;
+        bit [4:0] a, b, c;
+
+        function new(input bit [4:0] a = 0, b = 0, c = 0);
+            this.a = a;
+            this.b = b;
+            this.c = c;
+        endfunction
+
+        task add_members(output bit [6:0] sum);
+            sum = a + b + c;
+            $display("The sum of %0d, %0d, and %0d is: %0d", a, b, c, sum);
+        endtask
+    endclass
+
+    initial begin
+        test_class test;
+        bit [6:0] sum;
+        test = new(1, 2, 4);
+        test.add_members(sum);
+        $display("The sum outside of the class is %0d", sum);
+    end
+endmodule
