@@ -1,9 +1,9 @@
 `timescale 1ns / 1ps
-/////////////////////////////////////////////////
+//*************************************************///////
 
 // ASSIGNMENTS AND TESTING FOR SECTION 5: OOP CONSTRUCTS
 
-/////////////////////////////////////////////////
+//*************************************************///////
 
 
 // ASSIGNMENT A51: CLASS INITIALIZATION //
@@ -28,7 +28,7 @@ module tb2();
 endmodule
 */
 
-////////////////////////////////////////////
+//*************************************************//
 
 // ASSIGNMENT A52: FUNCTIONS //
 
@@ -46,7 +46,7 @@ module tb2();
 endmodule
 */
 
-////////////////////////////////////////////
+//*************************************************//
 
 // ASSIGNMENT A53: TASKS //
 /*
@@ -82,7 +82,7 @@ module tb2();
 endmodule
 */
 
-////////////////////////////////////////////
+//*************************************************//
 
 // ASSIGNMENT A54: PASSING ARRAYS TO FUNCTIONS //
 /*
@@ -104,7 +104,7 @@ module tb2();
 endmodule
 */
 
-////////////////////////////////////////////
+//*************************************************//
 
 // ASSIGNMENT A54.5: STREAMING OPERATORS //
 /*
@@ -116,7 +116,8 @@ module tb2();
     end
 endmodule
 */
-////////////////////////////////////////////
+
+//*************************************************//
 
 // ASSIGNMENT A55: CUSTOM CONSTRUCTORS FOR CLASSES //
 /*
@@ -138,10 +139,11 @@ module tb2();
     end
 endmodule
 */
-////////////////////////////////////////////
+
+//*************************************************//
 
 // ASSIGNMENT A55: CUSTOM CONSTRUCTORS FOR CLASSES //
-
+/*
 module tb2();
     class test_class;
         bit [4:0] a, b, c;
@@ -157,7 +159,7 @@ module tb2();
             $display("The sum of %0d, %0d, and %0d is: %0d", a, b, c, sum);
         endtask
     endclass
-
+ 
     initial begin
         test_class test;
         bit [6:0] sum;
@@ -166,3 +168,8 @@ module tb2();
         $display("The sum outside of the class is %0d", sum);
     end
 endmodule
+*/
+
+//*************************************************//
+
+// ASSIGNMENT A55: CUSTOM CONSTRUCTORS FOR CLASSES //
