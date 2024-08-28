@@ -142,7 +142,7 @@ endmodule
 
 //*************************************************//
 
-// ASSIGNMENT A55: CUSTOM CONSTRUCTORS FOR CLASSES //
+// ASSIGNMENT A56: TASKS IN CLASSES //
 /*
 module tb2();
     class test_class;
@@ -154,6 +154,7 @@ module tb2();
             this.c = c;
         endfunction
 
+        // The sum of three 4-bit numbers needs a 6-bit result.
         task add_members(output bit [6:0] sum);
             sum = a + b + c;
             $display("The sum of %0d, %0d, and %0d is: %0d", a, b, c, sum);
@@ -173,3 +174,78 @@ endmodule
 //*************************************************//
 
 // ASSIGNMENT A55: CUSTOM CONSTRUCTORS FOR CLASSES //
+/*
+module tb2();
+    class generator;
+        bit [3:0] a = 5,b =7;
+        bit wr = 1;
+        bit en = 1;
+        bit [4:0] s = 12;
+        
+        function void display();
+            $display("a:%0d b:%0d wr:%0b en:%0b s:%0d", a,b,wr,en,s);
+        endfunction
+
+        function generator copy();
+            copy = new();
+            copy.a = a;
+            copy.b = b;
+            copy.wr = wr;
+            copy.en = en;
+            copy.s = s;
+        endfunction
+    endclass
+
+    class top;
+        generator gen;
+
+        function new();
+            gen = new();
+        endfunction
+
+        function top copy();
+            copy = new();
+            copy.gen = gen.copy();
+        endfunction
+    endclass
+
+    initial begin
+        top t1;
+        top t2;
+        t1 = new();
+        t2 = t1.copy();
+        $display("T1 generator a value is %0d", t1.gen.a);
+        t2.gen.a = 2;
+        $display("T2 generator a value is %0d", t2.gen.a);
+        $display("T1 generator new a value is %0d", t1.gen.a);
+    end
+
+endmodule
+*/
+
+//*************************************************//
+
+// ASSIGNMENT A61: RANDOMIZING GENERATOR //
+
+module tb2();
+    class generator;
+        rand bit [7:0] x, y, z;
+
+        function display();
+            $display("The values of x, y, and z at time %0t are %0d, %0d, and %0d", $time, x, y, z);
+        endfunction
+    endclass
+
+    initial begin
+        generator g;
+        for (int i = 0; i < 20; i++) begin
+            g = new();
+            assert(g.randomize()) else begin
+                $display("Randomization failed at time %0t", $time);
+            end;
+            g.display();
+            #20;
+        end
+    end
+
+endmodule
