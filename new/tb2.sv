@@ -226,7 +226,7 @@ endmodule
 //*************************************************//
 
 // ASSIGNMENT A61: RANDOMIZING GENERATOR //
-
+/*
 module tb2();
     class generator;
         rand bit [7:0] x, y, z;
@@ -248,4 +248,117 @@ module tb2();
         end
     end
 
+endmodule
+*/
+
+//*************************************************//
+
+// ASSIGNMENT A62: RANDOM CONSTRAINTS AND EXTERNAL CONSTRAINTS/FUNCTIONS //
+/*
+module tb2();
+    class generator;
+        rand bit [7:0] x, y, z;
+
+        extern constraint data;
+        extern function void display();
+    endclass
+
+    constraint generator::data { 
+        x inside {[0:50]};
+        y inside {[0:50]};
+        z inside {[0:50]};
+    }
+
+    function void generator::display();
+        $display("The values are x = %0d, y = %0d, z = %0d", x, y, z);
+    endfunction
+
+    generator g;
+
+    initial begin
+        for (int i = 0; i < 20; i++) begin
+            g = new();
+            g.randomize();
+            g.display();
+            #20;
+        end
+    end
+
+endmodule
+*/
+
+//*************************************************//
+
+// ASSIGNMENT A63: RANDOM CONSTRAINTS AND RANDOMIZATION FAILURES //
+/*
+module tb2();
+    class generator;
+        rand bit [4:0] a;
+        rand bit [5:0] b;
+
+        constraint data {
+        a inside {[0:8]};
+        b inside {[0:5]};
+        }
+
+    endclass
+
+    initial begin
+        generator g;
+        bit status;
+        int failures = 0;
+        for (int i = 0; i < 20; i++) begin
+            g = new();
+            status = g.randomize();
+            if (!status) begin
+                failures += 1;
+            end
+            $display("a = %0d, b = %0d", g.a, g.b);
+            #10;
+        end
+        #10;
+        $display("Number of failures: %0d", failures);
+    end
+
+endmodule
+*/
+
+//*************************************************//
+
+// ASSIGNMENT A64: WEIGHTED DISTRIBUTIONS //
+
+module tb2();
+    class generator;
+        rand bit wr, rst;
+
+        constraint c_signals {
+            wr dist {0:=50, 1:=50};
+            rst dist {0:=30, 1:=70};
+        }
+
+        function void display();
+            $display("wr is %0d, rst is %0d", wr, rst);
+        endfunction
+    endclass
+
+    generator g;
+    int status;
+    int wr_count = 0;
+    int rst_count = 0;
+
+    initial begin
+        for (int i = 0; i < 1000; i++) begin
+            g = new();
+            status = g.randomize();
+            if (!status) begin
+                $finish("Randomization failed!");
+            end
+            g.display();
+            wr_count = wr_count + g.wr;
+            rst_count = rst_count + g.rst;
+            #1;
+        end
+
+        $display("wr was high for %0d iterations. rst was high for %0d iterations.", wr_count, rst_count);
+    end
 endmodule
