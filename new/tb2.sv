@@ -326,14 +326,18 @@ endmodule
 //*************************************************//
 
 // ASSIGNMENT A64: WEIGHTED DISTRIBUTIONS //
-
+/*
 module tb2();
     class generator;
         rand bit wr, rst;
 
         constraint c_signals {
+            {wr==0} -> {rst==1};
+        }
+        
+        /*constraint c_dist {
             wr dist {0:=50, 1:=50};
-            rst dist {0:=30, 1:=70};
+            rst dist {0:=50, 1:=50};
         }
 
         function void display();
@@ -343,22 +347,172 @@ module tb2();
 
     generator g;
     int status;
-    int wr_count = 0;
-    int rst_count = 0;
+    int high_high_count = 0;
+    int high_low_count = 0;
+    int low_high_count = 0;
+    int low_low_count = 0;
 
     initial begin
-        for (int i = 0; i < 1000; i++) begin
+        for (int i = 0; i < 10000; i++) begin
             g = new();
             status = g.randomize();
             if (!status) begin
                 $finish("Randomization failed!");
             end
             g.display();
-            wr_count = wr_count + g.wr;
-            rst_count = rst_count + g.rst;
+            if (g.wr == 1 && g.rst == 1) begin
+                high_high_count += 1;
+            end
+            else if (g.wr == 1 && g.rst == 0) begin
+                high_low_count += 1;
+            end
+            else if (g.wr == 0 && g.rst == 1) begin
+                low_high_count += 1;
+            end
+            else begin
+                low_low_count += 1;
+            end
             #1;
         end
 
-        $display("wr was high for %0d iterations. rst was high for %0d iterations.", wr_count, rst_count);
+        //$display("wr was high for %0d iterations. rst was high for %0d iterations.", wr_count, rst_count);
+        $display("high_high = %0d, high_low = %0d, low_high = %0d, low_low = %0d", high_high_count, high_low_count, low_high_count, low_low_count);
+        $finish;
     end
+endmodule
+*/
+
+//*************************************************//
+
+// ASSIGNMENT A65: CONSTRAINT IMPLICATION AND EQUIVALENCE OPERATORS //
+/*
+module tb2();
+    class generator;
+        rand bit [3:0] addr;
+        rand bit wr;
+
+        constraint signals {
+            {wr == 1} -> {addr inside {[0:7]}};
+            {wr == 0} -> {addr inside {[8:15]}};
+        }
+
+    endclass
+
+    generator g;
+    
+    initial begin
+        for (int i = 0; i < 20; i++) begin
+            g = new();
+            g.randomize();
+            $display("wr: %0d, addr: %0d", g.wr, g.addr);
+        end
+    end
+endmodule
+*/
+
+//*************************************************//
+
+// ASSIGNMENT A81: PARALLEL TASKS WITH FORK...JOIN //
+/*
+module tb2();
+
+    task automatic task_1(ref int count);
+        forever begin
+            #20;
+            $display("Task 1 Trigger");
+            count += 1;
+        end
+    endtask
+
+    task automatic task_2(ref int count);
+        forever begin
+            #40;
+            $display("Task 2 Trigger");
+            count += 1;
+        end
+    endtask
+
+    int task_1_count = 0;
+    int task_2_count = 0;
+    
+    initial begin
+        fork
+            task_1(task_1_count);
+            task_2(task_2_count);
+            #200;
+        join_any
+        $display("Task 1 executed %0d times, Task 2 executed %0d times.", task_1_count, task_2_count);
+        $finish;
+    end
+
+endmodule
+*/
+
+//*************************************************//
+
+// ASSIGNMENT A82: MAILBOXES //
+
+module tb2();
+
+    class transaction;
+        bit [7:0] addr = 7'h12;
+        bit [3:0] data = 4'h4;
+        bit we = 1'b1;
+        bit rst = 1'b0;
+    endclass
+
+    class generator;
+        mailbox #(transaction) gen2drv;
+        transaction t;
+
+        function new(mailbox #(transaction) gen2drv);
+            this.gen2drv = gen2drv;
+        endfunction
+
+        task run;
+            forever begin
+                t = new();
+                gen2drv.put(t);
+                $display("[GENERATOR] Sent transaction at time %0t: addr=%0h, data=%0h, we=%0b, rst=%0b", $time, t.addr, t.data, t.we, t.rst);
+                #10;
+            end
+        endtask
+    endclass
+
+    class driver;
+        mailbox #(transaction) gen2drv;
+        transaction t;
+
+        function new(mailbox #(transaction) gen2drv);
+            this.gen2drv = gen2drv;
+        endfunction
+
+        task run;
+            forever begin
+                gen2drv.get(t);
+                $display("[DRIVER] Received transaction at time %0t: addr=%0h, data=%0h, we=%0b, rst=%0b", $time, t.addr, t.data, t.we, t.rst);
+                #10;
+            end
+        endtask
+    endclass
+
+    generator g;
+    driver d;
+    mailbox #(transaction) gen2drv;
+
+    initial begin
+        gen2drv = new();
+        g = new(gen2drv);
+        d = new(gen2drv);
+        fork
+            g.run();
+            d.run();
+        join_none
+    end
+
+    initial begin
+        #200;
+        $finish;
+    end
+
 endmodule
