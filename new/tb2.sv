@@ -1,7 +1,7 @@
 `timescale 1ns / 1ps
 //*************************************************///////
 
-// ASSIGNMENTS AND TESTING FOR SECTION 5: OOP CONSTRUCTS
+// ASSIGNMENTS AND TESTING FOR SECTION 5 THROUGH 7
 
 //*************************************************///////
 
