@@ -20,6 +20,8 @@ class transaction;
     endfunction
 endclass
 
+// GENERATOR /////////////////////////////////////////////////
+
 class generator;
     transaction tx;
     mailbox #(transaction) gen2drv;
@@ -44,6 +46,8 @@ class generator;
     endtask : run
 endclass
 
+// INTERFACE /////////////////////////////////////////////////
+
 interface dut_if (input logic clk);
     logic [3:0] a, b;
     logic [7:0] mul;
@@ -59,6 +63,8 @@ interface dut_if (input logic clk);
     modport DUT (input a, b,
                     output mul);
 endinterface
+
+// DRIVER /////////////////////////////////////////////////
 
 class driver;
     virtual dut_if.TB dif;
@@ -87,20 +93,72 @@ class driver;
             dif.cb.b <= data.b;
             $display("[DRV]: DATA SENT TO INTERFACE AT %0t: a = %0d, b = %0d", $time, data.a, data.b);
             // Trigger event to signal to generator that it can send next transaction
+            @(dif.cb);
             ->data_processed;
         end
     endtask
 endclass
+
+// MONITOR /////////////////////////////////////////////////
+
+class monitor;
+    virtual dut_if.TB dif;
+    mailbox #(transaction) mon2scb;
+    transaction received_data;
+    event output_processed;
+
+    // Construct new monitor and instantiate transaction, and assign mailbox and event
+    function new(input mailbox #(transaction) mon2scb, input event output_processed);
+        this.mon2scb = mon2scb;
+        this.output_processed = output_processed;
+        received_data = new();
+        this.dif = tb3.dif;
+    endfunction : new
+
+    task run();
+        // Delay monitor a bit to account for delay in driver and DUT output
+        @(dif.cb);
+        forever begin
+            repeat(2) @(dif.cb);
+            received_data.mul = dif.cb.mul;
+            mon2scb.put(received_data.copy());
+            $display("[MON]: RECEIVED OUTPUT AT %0t: mul = %0d", $time, received_data.mul);
+        end
+    endtask : run
+endclass
+
+// SCOREBOARD /////////////////////////////////////////////////
+
+class scoreboard;
+    
+endclass
+
+// DESIGN UNDER TEST /////////////////////////////////////////////////
+module prod(input bit clk);
+    
+    always @(posedge clk) begin
+        dif.mul <= dif.a * dif.b;
+    end
+
+endmodule
+
+// TESTBENCH /////////////////////////////////////////////////
 
 module tb3();
     // Construct driver, clock, generator, mailbox, and interface
     // Also construct event to synchronize driver and generator
     bit clk;
     mailbox #(transaction) gen2drv;
+    mailbox #(transaction) mon2scb;
     driver drv;
     generator gen;
+    monitor mon;
     dut_if dif(clk);
     event data_processed;
+    event output_processed;
+
+    // Initialize DUT
+    prod prod(clk);
 
     // Start clock
     initial begin
@@ -111,19 +169,20 @@ module tb3();
         end
     end
 
-    // Initialize mailbox, interface, and testbench parts
+    // Initialize mailboxes and testbench parts
     initial begin
         gen2drv = new();
+        mon2scb = new();
         drv = new(gen2drv, data_processed);
         gen = new(gen2drv, data_processed);
-        // Spawn threads for driver and generator
+        mon = new(mon2scb, output_processed);
+        // Spawn threads for driver, generator, monitor, and scoreboard
         fork
             gen.run();
             drv.run();
+            mon.run();
         join_none
         #2000;
         $finish;
     end
 endmodule
-
-
